@@ -307,8 +307,8 @@ class raw_env(ParallelEnv[str, Box, Discrete | None]):  # pylint: disable=C0103
                     frame = self.view.get_frame()
                     # Convert the NumPy array back to a Pygame surface
                     screenshot_surface = pygame.surfarray.make_surface(frame)
-                    pygame.image.save(screenshot_surface, screenshot_filename)
-                    print(f"Screenshot saved as {screenshot_filename}")
+                    # pygame.image.save(screenshot_surface, screenshot_filename)
+                    # print(f"Screenshot saved as {screenshot_filename}")
 
         if self.render_mode == "rgb_array":
             # Get the current frame as RGB array

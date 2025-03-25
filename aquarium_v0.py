@@ -183,27 +183,29 @@ def parallel_env(
     )
 
 
-# env = env(
-#     # draw_force_vectors=True,
-#     # draw_action_vectors=True,
-#     # draw_view_cones=True,
-#     # draw_hit_boxes=True,
-#     # draw_death_circles=True,
-# )
-# env.reset(seed=42)
+env = env2(
+    # draw_force_vectors=True,
+    # draw_action_vectors=True,
+    # draw_view_cones=True,
+    # draw_hit_boxes=True,
+    # draw_death_circles=True,
+    procreate = True
+)
+env.reset(seed=42)
 
-# for agent in env.agent_iter():
-#     observation, reward, termination, truncation, info = env.last()
+for agent in env.agent_iter():
+    observation, reward, termination, truncation, info = env.last()
+    len(env.agents)
 
-#     if termination or truncation:
-#         action = None
-#     else:
-#         # this is where you would insert your policy
-#         action = env.action_space(agent).sample()
+    if termination or truncation:
+        action = None
+    else:
+        # this is where you would insert your policy
+        action = env.action_space(agent).sample()
 
-#     env.step(action)
-#     env.render()
-# env.close()
+    env.step(action)
+    env.render()
+env.close()
 
 
 # import numpy as np
@@ -524,359 +526,359 @@ def parallel_env(
 
 
 
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import random
-from collections import deque
+# import numpy as np
+# import torch
+# import torch.nn as nn
+# import torch.optim as optim
+# import random
+# from collections import deque
 
-# Define DQN Network using PyTorch
-class DQNNetwork(nn.Module):
-    def __init__(self, state_size, action_size):
-        super(DQNNetwork, self).__init__()
-        self.fc1 = nn.Linear(state_size, 24)
-        self.fc2 = nn.Linear(24, 24)
-        self.fc3 = nn.Linear(24, action_size)
+# # Define DQN Network using PyTorch
+# class DQNNetwork(nn.Module):
+#     def __init__(self, state_size, action_size):
+#         super(DQNNetwork, self).__init__()
+#         self.fc1 = nn.Linear(state_size, 24)
+#         self.fc2 = nn.Linear(24, 24)
+#         self.fc3 = nn.Linear(24, action_size)
         
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.fc3(x)
+#     def forward(self, x):
+#         x = torch.relu(self.fc1(x))
+#         x = torch.relu(self.fc2(x))
+#         return self.fc3(x)
 
-# DQN Agent
-class DQNAgent:
-    def __init__(self, state_size, action_size, learning_rate=0.001, discount_factor=0.95, 
-                 exploration_rate=1.0, exploration_decay=0.995, min_exploration_rate=0.01,
-                 device="cpu"):
-        self.state_size = state_size
-        self.action_size = action_size
-        self.device = device
-        self.memory = deque(maxlen=2000)  # Experience replay buffer
+# # DQN Agent
+# class DQNAgent:
+#     def __init__(self, state_size, action_size, learning_rate=0.001, discount_factor=0.95, 
+#                  exploration_rate=1.0, exploration_decay=0.995, min_exploration_rate=0.01,
+#                  device="cpu"):
+#         self.state_size = state_size
+#         self.action_size = action_size
+#         self.device = device
+#         self.memory = deque(maxlen=2000)  # Experience replay buffer
         
-        # Hyperparameters
-        self.gamma = discount_factor     # Discount factor
-        self.epsilon = exploration_rate  # Exploration rate
-        self.epsilon_decay = exploration_decay
-        self.epsilon_min = min_exploration_rate
-        self.learning_rate = learning_rate
+#         # Hyperparameters
+#         self.gamma = discount_factor     # Discount factor
+#         self.epsilon = exploration_rate  # Exploration rate
+#         self.epsilon_decay = exploration_decay
+#         self.epsilon_min = min_exploration_rate
+#         self.learning_rate = learning_rate
         
-        # Build neural network models - policy network
-        self.policy_net = DQNNetwork(state_size, action_size).to(device)
+#         # Build neural network models - policy network
+#         self.policy_net = DQNNetwork(state_size, action_size).to(device)
         
-        # Optimizer
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=learning_rate)
-        self.criterion = nn.MSELoss()
+#         # Optimizer
+#         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=learning_rate)
+#         self.criterion = nn.MSELoss()
         
-    def remember(self, state, action, reward, next_state, done):
-        """Store experience in replay memory"""
-        self.memory.append((state, action, reward, next_state, done))
+#     def remember(self, state, action, reward, next_state, done):
+#         """Store experience in replay memory"""
+#         self.memory.append((state, action, reward, next_state, done))
     
-    def choose_action(self, state):
-        """Select action using epsilon-greedy policy"""
-        if np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_size)
+#     def choose_action(self, state):
+#         """Select action using epsilon-greedy policy"""
+#         if np.random.rand() <= self.epsilon:
+#             return random.randrange(self.action_size)
         
-        state_tensor = torch.FloatTensor(state).to(self.device)
-        with torch.no_grad():
-            action_values = self.policy_net(state_tensor)
-        return torch.argmax(action_values).item()
+#         state_tensor = torch.FloatTensor(state).to(self.device)
+#         with torch.no_grad():
+#             action_values = self.policy_net(state_tensor)
+#         return torch.argmax(action_values).item()
     
-    def replay(self, batch_size=32):
-        """Train the network using experience replay"""
-        if len(self.memory) < batch_size:
-            return
+#     def replay(self, batch_size=32):
+#         """Train the network using experience replay"""
+#         if len(self.memory) < batch_size:
+#             return
         
-        # Sample random batch from memory
-        minibatch = random.sample(self.memory, batch_size)
+#         # Sample random batch from memory
+#         minibatch = random.sample(self.memory, batch_size)
         
-        states = []
-        targets = []
+#         states = []
+#         targets = []
         
-        for state, action, reward, next_state, done in minibatch:
-            state_tensor = torch.FloatTensor(state).to(self.device)
-            next_state_tensor = torch.FloatTensor(next_state).to(self.device)
+#         for state, action, reward, next_state, done in minibatch:
+#             state_tensor = torch.FloatTensor(state).to(self.device)
+#             next_state_tensor = torch.FloatTensor(next_state).to(self.device)
             
-            # Get current Q values
-            target = self.policy_net(state_tensor).detach().cpu().numpy()
+#             # Get current Q values
+#             target = self.policy_net(state_tensor).detach().cpu().numpy()
             
-            if done:
-                target[0][action] = reward
-            else:
-                # Get max Q value for next state
-                with torch.no_grad():
-                    next_q_values = self.policy_net(next_state_tensor)
-                    max_next_q = torch.max(next_q_values).item()
+#             if done:
+#                 target[0][action] = reward
+#             else:
+#                 # Get max Q value for next state
+#                 with torch.no_grad():
+#                     next_q_values = self.policy_net(next_state_tensor)
+#                     max_next_q = torch.max(next_q_values).item()
                 
-                # Update target Q value
-                target[0][action] = reward + self.gamma * max_next_q
+#                 # Update target Q value
+#                 target[0][action] = reward + self.gamma * max_next_q
             
-            states.append(state)
-            targets.append(target)
+#             states.append(state)
+#             targets.append(target)
         
-        # Convert lists to tensors for batch training
-        state_batch = torch.FloatTensor(np.array(states)).to(self.device)
-        target_batch = torch.FloatTensor(np.array(targets)).to(self.device)
+#         # Convert lists to tensors for batch training
+#         state_batch = torch.FloatTensor(np.array(states)).to(self.device)
+#         target_batch = torch.FloatTensor(np.array(targets)).to(self.device)
         
-        # Train the network
-        self.optimizer.zero_grad()
-        outputs = self.policy_net(state_batch)
-        loss = self.criterion(outputs, target_batch)
-        loss.backward()
-        self.optimizer.step()
+#         # Train the network
+#         self.optimizer.zero_grad()
+#         outputs = self.policy_net(state_batch)
+#         loss = self.criterion(outputs, target_batch)
+#         loss.backward()
+#         self.optimizer.step()
         
-        # Decay exploration rate
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+#         # Decay exploration rate
+#         if self.epsilon > self.epsilon_min:
+#             self.epsilon *= self.epsilon_decay
     
-    def save_model(self, filename):
-        """Save model weights to a file"""
-        torch.save(self.policy_net.state_dict(), filename)
+#     def save_model(self, filename):
+#         """Save model weights to a file"""
+#         torch.save(self.policy_net.state_dict(), filename)
     
-    def load_model(self, filename):
-        """Load model weights from a file"""
-        self.policy_net.load_state_dict(torch.load(filename))
-        self.policy_net.eval()
+#     def load_model(self, filename):
+#         """Load model weights from a file"""
+#         self.policy_net.load_state_dict(torch.load(filename))
+#         self.policy_net.eval()
 
-# Preprocessing function to handle different observation types
-def preprocess_observation(observation, state_size):
-    """Convert observation to a format suitable for the neural network"""
-    if isinstance(observation, np.ndarray):
-        # If observation is already an array, reshape it
-        processed = observation.flatten()
-        # Pad or truncate to match expected state_size
-        if len(processed) < state_size:
-            processed = np.pad(processed, (0, state_size - len(processed)))
-        else:
-            processed = processed[:state_size]
-    elif isinstance(observation, dict):
-        # For dictionary observations, extract and flatten key values
-        processed = []
-        for key in sorted(observation.keys()):
-            if isinstance(observation[key], np.ndarray):
-                processed.extend(observation[key].flatten())
-            elif isinstance(observation[key], (int, float)):
-                processed.append(observation[key])
+# # Preprocessing function to handle different observation types
+# def preprocess_observation(observation, state_size):
+#     """Convert observation to a format suitable for the neural network"""
+#     if isinstance(observation, np.ndarray):
+#         # If observation is already an array, reshape it
+#         processed = observation.flatten()
+#         # Pad or truncate to match expected state_size
+#         if len(processed) < state_size:
+#             processed = np.pad(processed, (0, state_size - len(processed)))
+#         else:
+#             processed = processed[:state_size]
+#     elif isinstance(observation, dict):
+#         # For dictionary observations, extract and flatten key values
+#         processed = []
+#         for key in sorted(observation.keys()):
+#             if isinstance(observation[key], np.ndarray):
+#                 processed.extend(observation[key].flatten())
+#             elif isinstance(observation[key], (int, float)):
+#                 processed.append(observation[key])
         
-        # Pad or truncate to match expected state_size
-        processed = np.array(processed)
-        if len(processed) < state_size:
-            processed = np.pad(processed, (0, state_size - len(processed)))
-        else:
-            processed = processed[:state_size]
+#         # Pad or truncate to match expected state_size
+#         processed = np.array(processed)
+#         if len(processed) < state_size:
+#             processed = np.pad(processed, (0, state_size - len(processed)))
+#         else:
+#             processed = processed[:state_size]
     
-    # Reshape for the neural network input
-    return processed.reshape(1, state_size)
+#     # Reshape for the neural network input
+#     return processed.reshape(1, state_size)
 
-# Main training function
-def train_dqn(env, episodes=300, state_size=10, batch_size=32, render_every=50, device="cpu"):
-    """Train DQN agents on the aquarium environment"""
-    # Dictionary to store agents
-    agents = {}
+# # Main training function
+# def train_dqn(env, episodes=300, state_size=10, batch_size=32, render_every=50, device="cpu"):
+#     """Train DQN agents on the aquarium environment"""
+#     # Dictionary to store agents
+#     agents = {}
     
-    # Dictionary to store rewards history
-    rewards_history = {}
+#     # Dictionary to store rewards history
+#     rewards_history = {}
     
-    for episode in range(episodes):
-        # Reset environment
-        env.reset(seed=episode)
+#     for episode in range(episodes):
+#         # Reset environment
+#         env.reset(seed=episode)
         
-        # Create DQN agents for new agents in environment
-        for agent_id in env.possible_agents:
-            if agent_id not in agents:
-                action_space = env.action_space(agent_id)
-                action_size = action_space.n
-                agents[agent_id] = DQNAgent(state_size=state_size, action_size=action_size, device=device)
+#         # Create DQN agents for new agents in environment
+#         for agent_id in env.possible_agents:
+#             if agent_id not in agents:
+#                 action_space = env.action_space(agent_id)
+#                 action_size = action_space.n
+#                 agents[agent_id] = DQNAgent(state_size=state_size, action_size=action_size, device=device)
             
-            if agent_id not in rewards_history:
-                rewards_history[agent_id] = []
+#             if agent_id not in rewards_history:
+#                 rewards_history[agent_id] = []
         
-        # Track rewards for this episode
-        episode_rewards = {agent_id: 0 for agent_id in env.possible_agents}
+#         # Track rewards for this episode
+#         episode_rewards = {agent_id: 0 for agent_id in env.possible_agents}
         
-        # Decide whether to render this episode
-        render = (episode % render_every == 0)
+#         # Decide whether to render this episode
+#         render = (episode % render_every == 0)
         
-        # Track active agents
-        active_agents = set(env.possible_agents)
+#         # Track active agents
+#         active_agents = set(env.possible_agents)
         
-        # Previous states and actions for learning
-        prev_states = {}
-        prev_actions = {}
+#         # Previous states and actions for learning
+#         prev_states = {}
+#         prev_actions = {}
         
-        # Main agent iteration loop
-        for agent_id in env.agent_iter():
-            # Skip if agent no longer active
-            if agent_id not in active_agents:
-                continue
+#         # Main agent iteration loop
+#         for agent_id in env.agent_iter():
+#             # Skip if agent no longer active
+#             if agent_id not in active_agents:
+#                 continue
             
-            # Get current state, reward, and done status
-            observation, reward, termination, truncation, info = env.last()
+#             # Get current state, reward, and done status
+#             observation, reward, termination, truncation, info = env.last()
             
-            # Accumulate reward
-            episode_rewards[agent_id] += reward
+#             # Accumulate reward
+#             episode_rewards[agent_id] += reward
             
-            # Check if done
-            done = termination or truncation
+#             # Check if done
+#             done = termination or truncation
             
-            # Process observation into state vector
-            current_state = preprocess_observation(observation, state_size)
+#             # Process observation into state vector
+#             current_state = preprocess_observation(observation, state_size)
             
-            # If agent has previous state, store experience
-            if agent_id in prev_states and agent_id in prev_actions:
-                agents[agent_id].remember(
-                    prev_states[agent_id], 
-                    prev_actions[agent_id], 
-                    reward, 
-                    current_state, 
-                    done
-                )
+#             # If agent has previous state, store experience
+#             if agent_id in prev_states and agent_id in prev_actions:
+#                 agents[agent_id].remember(
+#                     prev_states[agent_id], 
+#                     prev_actions[agent_id], 
+#                     reward, 
+#                     current_state, 
+#                     done
+#                 )
             
-            # Select action
-            if done:
-                action = None
-                active_agents.discard(agent_id)
-            else:
-                action = agents[agent_id].choose_action(current_state)
-                # Remember state and action for next step
-                prev_states[agent_id] = current_state
-                prev_actions[agent_id] = action
+#             # Select action
+#             if done:
+#                 action = None
+#                 active_agents.discard(agent_id)
+#             else:
+#                 action = agents[agent_id].choose_action(current_state)
+#                 # Remember state and action for next step
+#                 prev_states[agent_id] = current_state
+#                 prev_actions[agent_id] = action
             
-            # Execute action
-            try:
-                env.step(action)
-            except KeyError:
-                # Agent might have been removed during step
-                active_agents.discard(agent_id)
-                continue
+#             # Execute action
+#             try:
+#                 env.step(action)
+#             except KeyError:
+#                 # Agent might have been removed during step
+#                 active_agents.discard(agent_id)
+#                 continue
                 
-            # Train on past experiences (experience replay)
-            if not done and len(agents[agent_id].memory) > batch_size:
-                agents[agent_id].replay(batch_size)
+#             # Train on past experiences (experience replay)
+#             if not done and len(agents[agent_id].memory) > batch_size:
+#                 agents[agent_id].replay(batch_size)
             
-            # # Render if needed
-            # if render:
-            #     env.render()
+#             # Render if needed
+#             if render:
+#                 env.render()
         
-        # Record rewards
-        for agent_id in env.possible_agents:
-            if agent_id in episode_rewards:
-                if agent_id not in rewards_history:
-                    rewards_history[agent_id] = []
-                rewards_history[agent_id].append(episode_rewards[agent_id])
+#         # Record rewards
+#         for agent_id in env.possible_agents:
+#             if agent_id in episode_rewards:
+#                 if agent_id not in rewards_history:
+#                     rewards_history[agent_id] = []
+#                 rewards_history[agent_id].append(episode_rewards[agent_id])
         
-        # Print progress every 10 episodes
-        if episode % 10 == 0:
-            avg_rewards = {}
-            for agent_id, rewards in rewards_history.items():
-                if len(rewards) > 0:
-                    recent_rewards = rewards[-10:] if len(rewards) >= 10 else rewards
-                    avg_rewards[agent_id] = np.mean(recent_rewards)
-            print(f"Episode {episode}/{episodes}, Average Rewards: {avg_rewards}")
+#         # Print progress every 10 episodes
+#         if episode % 10 == 0:
+#             avg_rewards = {}
+#             for agent_id, rewards in rewards_history.items():
+#                 if len(rewards) > 0:
+#                     recent_rewards = rewards[-10:] if len(rewards) >= 10 else rewards
+#                     avg_rewards[agent_id] = np.mean(recent_rewards)
+#             print(f"Episode {episode}/{episodes}, Average Rewards: {avg_rewards}")
             
-            # Save models for select agents
-            for agent_id in env.possible_agents:
-                if agent_id in agents and "predator" in agent_id:
-                    agents[agent_id].save_model(f"dqn_model_{agent_id}_ep{episode}.pt")
+#             # Save models for select agents
+#             for agent_id in env.possible_agents:
+#                 if agent_id in agents and "predator" in agent_id:
+#                     agents[agent_id].save_model(f"dqn_model_{agent_id}_ep{episode}.pt")
     
-    return agents, rewards_history
+#     return agents, rewards_history
 
-# Evaluation function
-def evaluate_dqn(env, agents, episodes=2, state_size=10):
-    """Evaluate trained DQN agents"""
-    for episode in range(episodes):
-        env.reset(seed=1000 + episode)
+# # Evaluation function
+# def evaluate_dqn(env, agents, episodes=2, state_size=10):
+#     """Evaluate trained DQN agents"""
+#     for episode in range(episodes):
+#         env.reset(seed=1000 + episode)
         
-        # Track rewards
-        total_rewards = {agent_id: 0 for agent_id in env.possible_agents}
+#         # Track rewards
+#         total_rewards = {agent_id: 0 for agent_id in env.possible_agents}
         
-        # Track active agents
-        active_agents = set(env.possible_agents)
+#         # Track active agents
+#         active_agents = set(env.possible_agents)
         
-        for agent_id in env.agent_iter():
-            if agent_id not in active_agents:
-                continue
+#         for agent_id in env.agent_iter():
+#             if agent_id not in active_agents:
+#                 continue
                 
-            observation, reward, termination, truncation, info = env.last()
+#             observation, reward, termination, truncation, info = env.last()
             
-            total_rewards[agent_id] += reward
+#             total_rewards[agent_id] += reward
             
-            done = termination or truncation
+#             done = termination or truncation
             
-            if done:
-                action = None
-                active_agents.discard(agent_id)
-            else:
-                # Process observation
-                state = preprocess_observation(observation, state_size)
+#             if done:
+#                 action = None
+#                 active_agents.discard(agent_id)
+#             else:
+#                 # Process observation
+#                 state = preprocess_observation(observation, state_size)
                 
-                # Use trained policy (no exploration)
-                if agent_id in agents:
-                    # Set epsilon to 0 to disable exploration
-                    original_epsilon = agents[agent_id].epsilon
-                    agents[agent_id].epsilon = 0
-                    action = agents[agent_id].choose_action(state)
-                    agents[agent_id].epsilon = original_epsilon
-                else:
-                    # For unseen agents, use random action
-                    action = env.action_space(agent_id).sample()
+#                 # Use trained policy (no exploration)
+#                 if agent_id in agents:
+#                     # Set epsilon to 0 to disable exploration
+#                     original_epsilon = agents[agent_id].epsilon
+#                     agents[agent_id].epsilon = 0
+#                     action = agents[agent_id].choose_action(state)
+#                     agents[agent_id].epsilon = original_epsilon
+#                 else:
+#                     # For unseen agents, use random action
+#                     action = env.action_space(agent_id).sample()
             
-            try:
-                env.step(action)
-            except KeyError:
-                active_agents.discard(agent_id)
-                continue
+#             try:
+#                 env.step(action)
+#             except KeyError:
+#                 active_agents.discard(agent_id)
+#                 continue
             
-            # Always render evaluation
-            # env.render()
+#             # Always render evaluation
+#             # env.render()
         
-        print(f"Evaluation Episode {episode}, Rewards: {total_rewards}")
+#         print(f"Evaluation Episode {episode}, Rewards: {total_rewards}")
 
-# Main function
-def main():
-    # Import and create environment
+# # Main function
+# def main():
+#     # Import and create environment
     
-    aquarium_env = env2(
-        # Optional configuration parameters
-        # draw_force_vectors=True,
-        # draw_action_vectors=True,
-        # draw_view_cones=True,
-        # draw_hit_boxes=True,
-        # draw_death_circles=True,
-    )
+#     aquarium_env = env2(
+#         # Optional configuration parameters
+#         # draw_force_vectors=True,
+#         # draw_action_vectors=True,
+#         # draw_view_cones=True,
+#         # draw_hit_boxes=True,
+#         # draw_death_circles=True,
+#     )
     
-    # Define state size for neural network
-    STATE_SIZE = 10  # Adjust based on your observation space
+#     # Define state size for neural network
+#     STATE_SIZE = 10  # Adjust based on your observation space
     
-    # Choose device (CPU or GPU)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+#     # Choose device (CPU or GPU)
+#     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#     print(f"Using device: {device}")
     
-    # Train DQN agents
-    print("Starting training...")
-    trained_agents, rewards_history = train_dqn(
-        aquarium_env, 
-        episodes=2, 
-        state_size=STATE_SIZE,
-        render_every=50,
-        device=device
-    )
+#     # Train DQN agents
+#     print("Starting training...")
+#     trained_agents, rewards_history = train_dqn(
+#         aquarium_env, 
+#         episodes=2, 
+#         state_size=STATE_SIZE,
+#         render_every=50,
+#         device=device
+#     )
     
-    # Evaluate agents
-    print("\nStarting evaluation...")
-    evaluate_dqn(
-        aquarium_env, 
-        trained_agents, 
-        episodes=5,
-        state_size=STATE_SIZE
-    )
+#     # Evaluate agents
+#     print("\nStarting evaluation...")
+#     evaluate_dqn(
+#         aquarium_env, 
+#         trained_agents, 
+#         episodes=5,
+#         state_size=STATE_SIZE
+#     )
     
-    # Save final models
-    for agent_id, agent in trained_agents.items():
-        agent.save_model(f"dqn_model_{agent_id}_final.pt")
+#     # Save final models
+#     for agent_id, agent in trained_agents.items():
+#         agent.save_model(f"dqn_model_{agent_id}_final.pt")
     
-    # Close environment
-    aquarium_env.close()
+#     # Close environment
+#     aquarium_env.close()
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
